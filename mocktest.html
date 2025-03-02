@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamPro - Advanced Mock Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+    <nav class="bg-blue-800 text-white p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-graduation-cap text-2xl"></i>
+                <span class="font-bold text-xl">ExamPro</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-blue-200">Home</a>
+                <a href="#" class="hover:text-blue-200">Practice Tests</a>
+                <a href="#" class="hover:text-blue-200">My Progress</a>
+                <a href="#" class="hover:text-blue-200">Resources</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="timer" class="bg-blue-900 px-3 py-1 rounded-lg font-mono">00:00:00</span>
+                <div class="relative">
+                    <img src="/api/placeholder/40/40" alt="User Profile" class="w-8 h-8 rounded-full">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto mt-6 px-4">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6 bg-blue-700 text-white">
+                <h1 class="text-2xl font-bold">General Knowledge Mock Test</h1>
+                <div class="mt-2 flex flex-wrap gap-4">
+                    <div class="bg-blue-800 px-3 py-1 rounded-md text-sm">
+                        <i class="fas fa-question-circle mr-1"></i> Questions: <span id="total-questions">10</span>
+                    </div>
+                    <div class="bg-blue-800 px-3 py-1 rounded-md text-sm">
+                        <i class="fas fa-clock mr-1"></i> Time Limit: <span>30 minutes</span>
+                    </div>
+                    <div class="bg-blue-800 px-3 py-1 rounded-md text-sm">
+                        <i class="fas fa-trophy mr-1"></i> Pass Mark: 60%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Interface -->
+            <div id="test-interface" class="p-6">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Question Navigation -->
+                    <div class="md:w-1/4">
+                        <div class="bg-gray-50 p-4 rounded-lg shadow">
+                            <h3 class="font-bold text-lg mb-3">Question Navigator</h3>
+                            <div id="question-nav" class="grid grid-cols-5 gap-2">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                            <div class="mt-4 text-sm">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                                    <span>Answered</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <div class="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
+                                    <span>Flagged for review</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full mr-2"></div>
+                                    <span>Unanswered</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button id="finish-exam" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-150 font-bold">
+                                <i class="fas fa-stop-circle mr-1"></i> Finish Exam
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Question Display -->
+                    <div class="md:w-3/4">
+                        <div class="bg-white border rounded-lg shadow-sm p-6">
+                            <div class="flex justify-between mb-4">
+                                <h2 class="text-xl font-bold text-blue-800">Question <span id="current-number">1</span></h2>
+                                <button id="flag-question" class="text-gray-500 hover:text-yellow-500">
+                                    <i class="far fa-flag text-lg"></i>
+                                </button>
+                            </div>
+                            <div id="question-container" class="mb-6">
+                                <!-- Current question will be displayed here -->
+                            </div>
+                            <div class="flex justify-between mt-6">
+                                <button id="prev-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                                    <i class="fas fa-arrow-left mr-1"></i> Previous
+                                </button>
+                                <button id="next-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                                    Next <i class="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results View (Initially Hidden) -->
+            <div id="results-view" class="hidden p-6">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-lg p-8 border-t-4 border-blue-600">
+                        <h2 class="text-2xl font-bold text-center mb-6">Exam Results</h2>
+                        
+                        <div class="flex flex-col md:flex-row gap-8 items-center justify-center mb-8">
+                            <div class="text-center">
+                                <div id="result-score" class="text-5xl font-bold text-blue-600">0%</div>
+                                <div class="text-gray-500 mt-2">Your Score</div>
+                            </div>
+                            
+                            <div class="w-48 h-48">
+                                <canvas id="result-chart"></canvas>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div id="time-taken" class="text-2xl font-bold">00:00:00</div>
+                                <div class="text-gray-500 mt-2">Time Taken</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg text-center">
+                                <div class="text-lg font-bold" id="correct-answers">0</div>
+                                <div class="text-sm text-gray-600">Correct</div>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-lg text-center">
+                                <div class="text-lg font-bold" id="incorrect-answers">0</div>
+                                <div class="text-sm text-gray-600">Incorrect</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg text-center">
+                                <div class="text-lg font-bold" id="unanswered">0</div>
+                                <div class="text-sm text-gray-600">Unanswered</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center gap-4 mb-8">
+                            <button id="view-solutions" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                                <i class="fas fa-search mr-1"></i> View Solutions
+                            </button>
+                            <button id="retake-exam" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+                                <i class="fas fa-redo mr-1"></i> Retake Exam
+                            </button>
+                        </div>
+                        
+                        <div id="solutions-container" class="hidden bg-gray-50 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Detailed Solutions</h3>
+                            <div id="solutions" class="space-y-6">
+                                <!-- Solutions will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Confirmation Modal (Initially Hidden) -->
+            <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-xl font-bold mb-4">Finish Exam?</h3>
+                    <p class="text-gray-600 mb-6">Are you sure you want to finish the exam? You have <span id="questions-unanswered">0</span> questions unanswered.</p>
+                    <div class="flex justify-end space-x-4">
+                        <button id="cancel-finish" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">Cancel</button>
+                        <button id="confirm-finish" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">Finish Exam</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced questions with additional metadata and explanations
+        const questions = [
+            { 
+                id: 1,
+                q: "34 : 64 :: 28 : ?", 
+                options: [64, 512, 256, 100], 
+                answer: 256,
+                category: "Numerical Reasoning",
+                difficulty: "Medium",
+                explanation: "This is a numerical analogy. In the first pair, 34² ≈ 64 × 18. Similarly, for the second pair, 28² ≈ 256 × 3. The pattern involves squaring the first number and finding a relationship with the second."
+            },
+            { 
+                id: 2,
+                q: "5, 10, 20, 40, ?", 
+                options: [60, 80, 100, 120], 
+                answer: 80,
+                category: "Sequence",
+                difficulty: "Easy",
+                explanation: "Each number in the sequence is multiplied by 2 to get the next number. 5 × 2 = 10, 10 × 2 = 20, 20 × 2 = 40, 40 × 2 = 80."
+            },
+            { 
+                id: 3,
+                q: "Which number is missing? 2, 6, 12, 20, ?", 
+                options: [28, 30, 32, 36], 
+                answer: 30,
+                category: "Sequence",
+                difficulty: "Medium",
+                explanation: "The differences between consecutive numbers form a pattern: +4, +6, +8, +10. Adding 10 to 20 gives us 30."
+            },
+            { 
+                id: 4,
+                q: "What is the capital of France?", 
+                options: ["Berlin", "Madrid", "Paris", "Rome"], 
+                answer: "Paris",
+                category: "Geography",
+                difficulty: "Easy",
+                explanation: "Paris is the capital and most populous city of France."
+            },
+            { 
+                id: 5,
+                q: "5 + 3 × 2 = ?", 
+                options: [11, 16, 10, 8], 
+                answer: 11,
+                category: "Mathematics",
+                difficulty: "Easy",
+                explanation: "Following the order of operations (PEMDAS), multiplication comes before addition. So, 3 × 2 = 6, then 5 + 6 = 11."
+            },
+            { 
+                id: 6,
+                q: "Find the missing letter: A, C, E, G, ?", 
+                options: ["H", "I", "J", "K"], 
+                answer: "I",
+                category: "Logical Reasoning",
+                difficulty: "Easy",
+                explanation: "Each letter skips one letter in the alphabet. A→C skips B, C→E skips D, E→G skips F, and G→I skips H."
+            },
+            { 
+                id: 7,
+                q: "What is 12% of 50?", 
+                options: [5, 6, 7, 8], 
+                answer: 6,
+                category: "Mathematics",
+                difficulty: "Easy",
+                explanation: "To find the percentage: 12% of 50 = (12/100) × 50 = 6."
+            },
+            { 
+                id: 8,
+                q: "Which is the largest planet in our solar system?", 
+                options: ["Mars", "Earth", "Jupiter", "Venus"], 
+                answer: "Jupiter",
+                category: "Science",
+                difficulty: "Easy",
+                explanation: "Jupiter is the largest planet in our solar system. It is the fifth planet from the Sun and is a gas giant."
+            },
+            { 
+                id: 9,
+                q: "What is the square root of 144?", 
+                options: [10, 11, 12, 13], 
+                answer: 12,
+                category: "Mathematics",
+                difficulty: "Easy",
+                explanation: "The square root of 144 is 12 because 12 × 12 = 144."
+            },
+            { 
+                id: 10,
+                q: "Which ocean is the largest by surface area?", 
+                options: ["Atlantic", "Indian", "Arctic", "Pacific"], 
+                answer: "Pacific",
+                category: "Geography",
+                difficulty: "Easy",
+                explanation: "The Pacific Ocean is the largest and deepest ocean on Earth, covering more than 30% of the Earth's surface."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let flaggedQuestions = new Array(questions.length).fill(false);
+        let startTime;
+        let timerInterval;
+        let examFinished = false;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById("timer").textContent = formatTime(elapsedSeconds);
+                
+                // Auto-submit after 30 minutes (1800 seconds)
+                if (elapsedSeconds >= 1800 && !examFinished) {
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        function updateQuestionNav() {
+            const nav = document.getElementById("question-nav");
+            nav.innerHTML = "";
+            
+            questions.forEach((q, index) => {
+                const button = document.createElement("button");
+                button.textContent = index + 1;
+                button.className = "w-8 h-8 rounded-full text-sm font-medium flex items-center justify-center";
+                
+                // Set button styling based on answer status and current question
+                if (userAnswers[index] !== null) {
+                    button.classList.add("bg-green-500", "text-white");
+                } else if (flaggedQuestions[index]) {
+                    button.classList.add("bg-yellow-400", "text-white");
+                } else {
+                    button.classList.add("bg-gray-300", "text-gray-700");
+                }
+                
+                if (index === currentQuestion) {
+                    button.classList.add("ring-2", "ring-blue-600", "ring-offset-2");
+                }
+                
+                button.addEventListener("click", () => {
+                    currentQuestion = index;
+                    loadQuestion(currentQuestion);
+                    updateQuestionNav();
+                });
+                
+                nav.appendChild(button);
+            });
+        }
+
+        function loadQuestion(index) {
+            const question = questions[index];
+            document.getElementById("current-number").textContent = index + 1;
+            
+            let html = `
+                <div class="mb-4">
+                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-100 text-blue-700 mr-2">${question.category}</span>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${question.difficulty === 'Easy' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${question.difficulty}</span>
+                </div>
+                <p class="text-lg mb-4">${question.q}</p>
+                <div class="space-y-3">
+            `;
+            
+            question.options.forEach((opt, i) => {
+                const isChecked = userAnswers[index] === opt;
+                const optionId = `option-${i}`;
+                html += `
+                    <label for="${optionId}" class="block p-3 border rounded-lg ${isChecked ? 'bg-blue-50 border-blue-400' : 'hover:bg-gray-50'} cursor-pointer transition">
+                        <div class="flex items-center">
+                            <input type="radio" id="${optionId}" name="question" value="${opt}" ${isChecked ? 'checked' : ''} class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-3">${opt}</span>
+                        </div>
+                    </label>
+                `;
+            });
+            
+            html += `</div>`;
+            document.getElementById("question-container").innerHTML = html;
+            
+            // Update flag button appearance
+            const flagButton = document.getElementById("flag-question");
+            if (flaggedQuestions[index]) {
+                flagButton.classList.add("text-yellow-500");
+                flagButton.classList.remove("text-gray-500");
+                flagButton.innerHTML = '<i class="fas fa-flag text-lg"></i>';
+            } else {
+                flagButton.classList.add("text-gray-500");
+                flagButton.classList.remove("text-yellow-500");
+                flagButton.innerHTML = '<i class="far fa-flag text-lg"></i>';
+            }
+            
+            // Update navigation buttons
+            document.getElementById("prev-btn").classList.toggle("invisible", index === 0);
+            
+            // Add event listeners to radio buttons
+            document.querySelectorAll('input[name="question"]').forEach(radio => {
+                radio.addEventListener("change", () => {
+                    userAnswers[currentQuestion] = radio.value;
+                    updateQuestionNav();
+                });
+            });
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            examFinished = true;
+            
+            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById("time-taken").textContent = formatTime(elapsedSeconds);
+            
+            // Calculate results
+            let correct = 0;
+            let incorrect = 0;
+            let unanswered = 0;
+            
+            userAnswers.forEach((answer, i) => {
+                if (answer === null) {
+                    unanswered++;
+                } else if (answer == questions[i].answer) { // Use == for type coercion in case of strings/numbers
+                    correct++;
+                } else {
+                    incorrect++;
+                }
+            });
+            
+            const scorePercentage = Math.round((correct / questions.length) * 100);
+            
+            // Update results UI
+            document.getElementById("result-score").textContent = `${scorePercentage}%`;
+            document.getElementById("correct-answers").textContent = correct;
+            document.getElementById("incorrect-answers").textContent = incorrect;
+            document.getElementById("unanswered").textContent = unanswered;
+            
+            // Create results chart
+            const ctx = document.getElementById("result-chart").getContext("2d");
+            new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: ["Correct", "Incorrect", "Unanswered"],
+                    datasets: [{
+                        data: [correct, incorrect, unanswered],
+                        backgroundColor: ["#3B82F6", "#EF4444", "#9CA3AF"]
+                    }]
+                },
+                options: {
+                    cutout: "70%",
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Generate solutions
+            let solutionsHtml = "";
+            questions.forEach((q, i) => {
+                const userAnswer = userAnswers[i] === null ? "Not answered" : userAnswers[i];
+                const isCorrect = userAnswers[i] == q.answer;
+                
+                solutionsHtml += `
+                    <div class="border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'} pl-4 py-1">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="font-bold">Question ${i+1}:</span> ${q.q}
+                                <div class="mt-2 text-sm">
+                                    <span class="font-semibold">Your Answer:</span> <span class="${isCorrect ? 'text-green-600' : 'text-red-600'}">${userAnswer}</span>
+                                </div>
+                                <div class="mt-1 text-sm">
+                                    <span class="font-semibold">Correct Answer:</span> <span class="text-green-600">${q.answer}</span>
+                                </div>
+                            </div>
+                            <div class="ml-2">
+                                ${isCorrect 
+                                    ? '<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Correct</span>'
+                                    : '<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">Incorrect</span>'
+                                }
+                            </div>
+                        </div>
+                        <div class="mt-2 bg-gray-100 p-3 rounded-md">
+                            <span class="text-sm font-semibold">Explanation:</span>
+                            <p class="text-sm mt-1">${q.explanation}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById("solutions").innerHTML = solutionsHtml;
+            
+            // Show results view, hide test interface
+            document.getElementById("test-interface").classList.add("hidden");
+            document.getElementById("results-view").classList.remove("hidden");
+        }
+
+        function finishExam() {
+            showResults();
+        }
+
+        function initExam() {
+            examFinished = false;
+            currentQuestion = 0;
+            userAnswers = new Array(questions.length).fill(null);
+            flaggedQuestions = new Array(questions.length).fill(false);
+            
+            document.getElementById("total-questions").textContent = questions.length;
+            updateQuestionNav();
+            loadQuestion(currentQuestion);
+            
+            // Reset and show test interface
+            document.getElementById("results-view").classList.add("hidden");
+            document.getElementById("test-interface").classList.remove("hidden");
+            document.getElementById("solutions-container").classList.add("hidden");
+            
+            // Start timer
+            clearInterval(timerInterval);
+            startTimer();
+        }
+
+        // Initialize on document ready
+        $(document).ready(function() {
+            initExam();
+            
+            // Event Listeners
+            $("#next-btn").click(function() {
+                userAnswers[currentQuestion] = $("input[name='question']:checked").val() || userAnswers[currentQuestion];
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    loadQuestion(currentQuestion);
+                    updateQuestionNav();
+                }
+            });
+            
+            $("#prev-btn").click(function() {
+                userAnswers[currentQuestion] = $("input[name='question']:checked").val() || userAnswers[currentQuestion];
+                if (currentQuestion > 0) {
+                    currentQuestion--;
+                    loadQuestion(currentQuestion);
+                    updateQuestionNav();
+                }
+            });
+            
+            $("#flag-question").click(function() {
+                flaggedQuestions[currentQuestion] = !flaggedQuestions[currentQuestion];
+                updateQuestionNav();
+                loadQuestion(currentQuestion); // Refresh to update flag button
+            });
+            
+            $("#finish-exam").click(function() {
+                const unansweredCount = userAnswers.filter(a => a === null).length;
+                $("#questions-unanswered").text(unansweredCount);
+                $("#confirm-modal").removeClass("hidden");
+            });
+            
+            $("#cancel-finish").click(function() {
+                $("#confirm-modal").addClass("hidden");
+            });
+            
+            $("#confirm-finish").click(function() {
+                $("#confirm-modal").addClass("hidden");
+                finishExam();
+            });
+            
+            $("#view-solutions").click(function() {
+                $("#solutions-container").toggleClass("hidden");
+                
+                // Scroll to solutions if showing
+                if (!$("#solutions-container").hasClass("hidden")) {
+                    $("#solutions-container")[0].scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            
+            $("#retake-exam").click(function() {
+                initExam();
+            });
+        });
+    </script>
+</body>
+</html>
